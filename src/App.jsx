@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable jsx-a11y/accessible-emoji */
-import React from 'react';
+import React, { useState } from 'react';
 import './App.scss';
 
 import usersFromServer from './api/users';
@@ -23,9 +24,25 @@ const products = productsFromServer.map(product => {
 });
 
 export const App = () => {
-  const visibleProducts = products.filter(
-    product => product.category && product.user,
-  );
+  const [selectedUser, setSelectedUser] = useState(null);
+
+  const filteredProducts = selectedUser
+    ? products.filter(
+      product => product.user && product.user.id === selectedUser,
+    )
+    : products.filter(product => product.category && product.user);
+
+  // const visibleProducts = products.filter(
+  //   product => product.category && product.user,
+  // );
+
+  const handleUserFilter = user => {
+    setSelectedUser(user);
+  };
+
+  const handleResetFilters = () => {
+    setSelectedUser(null);
+  };
 
   return (
     <div className="section">
@@ -37,21 +54,31 @@ export const App = () => {
             <p className="panel-heading">Filters</p>
 
             <p className="panel-tabs has-text-weight-bold">
-              <a data-cy="FilterAllUsers" href="#/">
+              <a
+                data-cy="FilterAllUsers"
+                href="#/"
+                className={!selectedUser ? 'is-active' : ''}
+                onClick={event => {
+                  event.preventDefault();
+                  handleUserFilter(null);
+                }}
+              >
                 All
               </a>
 
-              <a data-cy="FilterUser" href="#/">
-                User 1
-              </a>
-
-              <a data-cy="FilterUser" href="#/" className="is-active">
-                User 2
-              </a>
-
-              <a data-cy="FilterUser" href="#/">
-                User 3
-              </a>
+              {usersFromServer.map(user => (
+                <a
+                  data-cy="FilterUser"
+                  href="#/"
+                  key={user.id}
+                  onClick={event => {
+                    event.preventDefault();
+                    handleUserFilter(user.id);
+                  }}
+                >
+                  {user.name}
+                </a>
+              ))}
             </p>
 
             <div className="panel-block">
@@ -117,6 +144,10 @@ export const App = () => {
                 data-cy="ResetAllButton"
                 href="#/"
                 className="button is-link is-outlined is-fullwidth"
+                onClick={event => {
+                  event.preventDefault();
+                  handleResetFilters();
+                }}
               >
                 Reset all filters
               </a>
@@ -182,7 +213,7 @@ export const App = () => {
             </thead>
 
             <tbody>
-              {visibleProducts.map(product => (
+              {filteredProducts.map(product => (
                 <tr key={product.id} data-cy="Product">
                   <td className="has-text-weight-bold" data-cy="ProductId">
                     {product.id}
