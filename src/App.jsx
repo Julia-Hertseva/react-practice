@@ -25,6 +25,7 @@ const products = productsFromServer.map(product => {
 
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
+  const [search, setSearch] = useState('');
 
   const filteredProducts = selectedUser
     ? products.filter(
@@ -32,9 +33,11 @@ export const App = () => {
     )
     : products.filter(product => product.category && product.user);
 
-  // const visibleProducts = products.filter(
-  //   product => product.category && product.user,
-  // );
+  const searchFilteredProducts = filteredProducts.filter(product =>
+    product.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+  // eslint-disable-next-line function-paren-newline
+  );
+
 
   const handleUserFilter = user => {
     setSelectedUser(user);
@@ -42,6 +45,15 @@ export const App = () => {
 
   const handleResetFilters = () => {
     setSelectedUser(null);
+    setSearch('');
+  };
+
+  const handleSearch = (event) => {
+    setSearch(event.target.value);
+  };
+
+  const handleClearSearch = () => {
+    setSearch('');
   };
 
   return (
@@ -71,6 +83,7 @@ export const App = () => {
                   data-cy="FilterUser"
                   href="#/"
                   key={user.id}
+                  className={selectedUser === user.id ? 'is-active' : ''}
                   onClick={event => {
                     event.preventDefault();
                     handleUserFilter(user.id);
@@ -88,21 +101,25 @@ export const App = () => {
                   type="text"
                   className="input"
                   placeholder="Search"
-                  value="qwe"
+                  value={search}
+                  onChange={handleSearch}
                 />
 
                 <span className="icon is-left">
                   <i className="fas fa-search" aria-hidden="true" />
                 </span>
 
-                <span className="icon is-right">
-                  {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
-                  <button
-                    data-cy="ClearButton"
-                    type="button"
-                    className="delete"
-                  />
-                </span>
+                {search && (
+                  <span className="icon is-right">
+                    {/* eslint-disable-next-line jsx-a11y/control-has-associated-label */}
+                    <button
+                      data-cy="ClearButton"
+                      type="button"
+                      className="delete"
+                      onClick={handleClearSearch}
+                    />
+                  </span>
+                )}
               </p>
             </div>
 
@@ -213,7 +230,7 @@ export const App = () => {
             </thead>
 
             <tbody>
-              {filteredProducts.map(product => (
+              {searchFilteredProducts.map(product => (
                 <tr key={product.id} data-cy="Product">
                   <td className="has-text-weight-bold" data-cy="ProductId">
                     {product.id}
