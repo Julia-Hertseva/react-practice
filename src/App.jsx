@@ -28,6 +28,10 @@ export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState('');
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [sortConfig, setSortConfig] = useState({
+    field: null,
+    direction: null,
+  });
 
   const filteredProducts = selectedUser
     ? products.filter(
@@ -45,6 +49,77 @@ export const App = () => {
     // eslint-disable-next-line function-paren-newline
   );
 
+  const sortedProducts = [...searchFilteredProducts].sort((a, b) => {
+    if (!sortConfig.field || !sortConfig.direction) {
+      return 0;
+    }
+
+    let aValue, bValue;
+
+    switch (sortConfig.field) {
+      case 'id':
+        aValue = a.id;
+        bValue = b.id;
+        break;
+      case 'name':
+        aValue = a.name.toLowerCase();
+        bValue = b.name.toLowerCase();
+        break;
+      case 'category':
+        aValue = a.category?.title?.toLowerCase() || '';
+        bValue = b.category?.title?.toLowerCase() || '';
+        break;
+      case 'user':
+        aValue = a.user?.name?.toLowerCase() || '';
+        bValue = b.user?.name?.toLowerCase() || '';
+        break;
+      default:
+        return 0;
+    }
+
+    if (aValue < bValue) {
+      return sortConfig.direction === 'asc' ? -1 : 1;
+    }
+
+    if (aValue > bValue) {
+      return sortConfig.direction === 'asc' ? 1 : -1;
+    }
+
+    return 0;
+  });
+
+  const handleSort = field => {
+    setSortConfig(prev => {
+
+      if (prev.field !== field) {
+        return { field, direction: 'asc' };
+      }
+
+      switch (prev.direction) {
+        case 'asc':
+          return { field, direction: 'desc' };
+        case 'desc':
+          return { field: null, direction: null };
+        default:
+          return { field, direction: 'asc' };
+      }
+    });
+  };
+
+  const getSortIcon = field => {
+    if (sortConfig.field !== field) {
+      return <i data-cy="SortIcon" className="fas fa-sort" />;
+    }
+
+    switch (sortConfig.direction) {
+      case 'asc':
+        return <i data-cy="SortIcon" className="fas fa-sort-up" />;
+      case 'desc':
+        return <i data-cy="SortIcon" className="fas fa-sort-down" />;
+      default:
+        return <i data-cy="SortIcon" className="fas fa-sort" />;
+    }
+  };
 
   const handleUserFilter = user => {
     setSelectedUser(user);
@@ -210,10 +285,14 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       ID
-                      <a href="#/">
-                        <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort" />
-                        </span>
+                      <a
+                        href="#/"
+                        onClick={event => {
+                          event.preventDefault();
+                          handleSort('id');
+                        }}
+                      >
+                        <span className="icon">{getSortIcon('id')}</span>
                       </a>
                     </span>
                   </th>
@@ -221,10 +300,14 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Product
-                      <a href="#/">
-                        <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort-down" />
-                        </span>
+                      <a
+                        href="#/"
+                        onClick={event => {
+                          event.preventDefault();
+                          handleSort('name');
+                        }}
+                      >
+                        <span className="icon">{getSortIcon('name')}</span>
                       </a>
                     </span>
                   </th>
@@ -232,10 +315,14 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       Category
-                      <a href="#/">
-                        <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort-up" />
-                        </span>
+                      <a
+                        href="#/"
+                        onClick={event => {
+                          event.preventDefault();
+                          handleSort('category');
+                        }}
+                      >
+                        <span className="icon">{getSortIcon('category')}</span>
                       </a>
                     </span>
                   </th>
@@ -243,10 +330,14 @@ export const App = () => {
                   <th>
                     <span className="is-flex is-flex-wrap-nowrap">
                       User
-                      <a href="#/">
-                        <span className="icon">
-                          <i data-cy="SortIcon" className="fas fa-sort" />
-                        </span>
+                      <a
+                        href="#/"
+                        onClick={event => {
+                          event.preventDefault();
+                          handleSort('user');
+                        }}
+                      >
+                        <span className="icon">{getSortIcon('user')}</span>
                       </a>
                     </span>
                   </th>
@@ -254,7 +345,7 @@ export const App = () => {
               </thead>
 
               <tbody>
-                {searchFilteredProducts.map(product => (
+                {sortedProducts.map(product => (
                   <tr key={product.id} data-cy="Product">
                     <td className="has-text-weight-bold" data-cy="ProductId">
                       {product.id}
