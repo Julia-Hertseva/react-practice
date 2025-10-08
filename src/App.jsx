@@ -1,3 +1,4 @@
+/* eslint-disable max-len */
 /* eslint-disable prettier/prettier */
 /* eslint-disable jsx-a11y/accessible-emoji */
 import React, { useState } from 'react';
@@ -26,6 +27,7 @@ const products = productsFromServer.map(product => {
 export const App = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [search, setSearch] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState([]);
 
   const filteredProducts = selectedUser
     ? products.filter(
@@ -33,9 +35,14 @@ export const App = () => {
     )
     : products.filter(product => product.category && product.user);
 
-  const searchFilteredProducts = filteredProducts.filter(product =>
-    product.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
-  // eslint-disable-next-line function-paren-newline
+  const categoryFilteredProducts = selectedCategories.length > 0
+    ? filteredProducts.filter(product => selectedCategories.includes(product.categoryId))
+    : filteredProducts;
+
+  const searchFilteredProducts = categoryFilteredProducts.filter(
+    product =>
+      product.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()),
+    // eslint-disable-next-line function-paren-newline
   );
 
 
@@ -43,9 +50,25 @@ export const App = () => {
     setSelectedUser(user);
   };
 
+  const handleCategoryFilter = (categoryId) => {
+    setSelectedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId);
+      }
+
+      return [...prev, categoryId];
+
+    });
+  };
+
+  const handleAllCategories = () => {
+    setSelectedCategories([]);
+  };
+
   const handleResetFilters = () => {
     setSelectedUser(null);
     setSearch('');
+    setSelectedCategories([]);
   };
 
   const handleSearch = (event) => {
@@ -127,7 +150,13 @@ export const App = () => {
               <a
                 href="#/"
                 data-cy="AllCategories"
-                className="button is-success mr-6 is-outlined"
+                className={`button is-success mr-6 ${
+                  selectedCategories.length === 0 ? '' : 'is-outlined'
+                }`}
+                onClick={event => {
+                  event.preventDefault();
+                  handleAllCategories();
+                }}
               >
                 All
               </a>
@@ -135,9 +164,15 @@ export const App = () => {
               {categoriesFromServer.map(category => (
                 <a
                   data-cy="Category"
-                  className="button mr-2 my-1 is-info"
+                  className={`button mr-2 my-1 ${
+                    selectedCategories.includes(category.id) ? 'is-info' : ''
+                  }`}
                   href="#/"
                   key={category.id}
+                  onClick={event => {
+                    event.preventDefault();
+                    handleCategoryFilter(category.id);
+                  }}
                 >
                   {category.title}
                 </a>
